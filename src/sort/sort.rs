@@ -84,12 +84,11 @@ pub fn run(path: std::path::PathBuf, playlist: &str, methods: &Vec<SortMethod>) 
     }
 }
 
-fn run_sort_round_by<'a>(chunks: Vec<Vec<TrackObject>>, method: SortMethod) -> Vec<Vec<TrackObject>> {
+fn run_sort_round_by(chunks: Vec<Vec<TrackObject>>, method: SortMethod) -> Vec<Vec<TrackObject>> {
     let mut out: Vec<Vec<TrackObject>> = Vec::new();
     for mut chunk in chunks {
         chunk.sort_unstable_by(|a,b| method.cmp(a,b));
-        let mut new: Vec<TrackObject> = Vec::new();
-        new.push(chunk.remove(0));
+        let mut new: Vec<TrackObject> = vec![chunk.remove(0)];
         while !chunk.is_empty() {
             match method.cmp(new.last().unwrap(), chunk.first().unwrap()) {
                 Ordering::Equal => {
@@ -97,8 +96,7 @@ fn run_sort_round_by<'a>(chunks: Vec<Vec<TrackObject>>, method: SortMethod) -> V
                 },
                 _ => {
                     out.push(new);
-                    new = Vec::new();
-                    new.push(chunk.remove(0));
+                    new = vec![chunk.remove(0)];
                 }
             }
         }

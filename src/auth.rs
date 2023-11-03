@@ -41,22 +41,21 @@ pub fn run(path: PathBuf) {
     println!("Open the following link and authorize:\n{}", auth_url);
 
     let listener = TcpListener::bind("127.0.0.1:8888").expect("Failed to bind to port 8888!");
-    let data: String;
-    match listener.accept() {
+    let data: String = match listener.accept() {
         Ok((mut stream, _addr)) => {
             println!("Connection opened.");
             write!(&mut stream, "HTTP/1.1 204 No Content\r\n\r\n")
                 .expect("Failed to send response");
 
             let buf_reader = BufReader::new(&mut stream);
-            data = buf_reader
+            buf_reader
                 .lines()
                 .map(|result| result.unwrap())
                 .take(1)
-                .collect();
+                .collect()
         }
         Err(..) => panic!("Failed to get client"),
-    }
+    };
     // This extracts the code from our data,
     // skips characters until code starts
     // and takes until a space indicating the code is over
@@ -106,8 +105,8 @@ struct RefreshRes {
 
 #[derive(Debug)]
 pub enum RefreshError {
-    Request(ureq::Error),
-    JSON(std::io::Error),
+    Request(Box<ureq::Error>),
+    Json(std::io::Error),
     Config {
         missing_refresh_token: bool,
         missing_client_id: bool,
@@ -161,12 +160,12 @@ pub fn refresh(config: &util::Config) -> Result<Token, RefreshError> {
         ])
         .call();
 
-    if res.is_err() {
-        return Err(RefreshError::Request(res.unwrap_err()));
+    if let Err(e) = res {
+        return Err(RefreshError::Request(Box::new(e)));
     }
 
     match res.unwrap().into_json::<RefreshRes>() {
-        Err(e) => Err(RefreshError::JSON(e)),
+        Err(e) => Err(RefreshError::Json(e)),
         Ok(t) => Ok(Token(t.access_token)),
     }
 }

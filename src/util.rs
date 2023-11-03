@@ -14,7 +14,7 @@ pub struct Config {
 
 pub fn read_config(path: &PathBuf) -> Config {
     let path = PathBuf::from(
-        shellexpand::tilde(&path.clone().into_os_string().into_string().ok().unwrap()).to_string(),
+        shellexpand::tilde(&path.to_path_buf().into_os_string().into_string().ok().unwrap()).to_string(),
     ).join("config");
 
     if !path.is_file() {

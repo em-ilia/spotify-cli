@@ -7,7 +7,7 @@ use crate::spotify::types::{PlaylistTrackObject, Token, TrackObject, Uri};
 #[derive(Debug)]
 pub enum UreqOrJSONError {
     Request(ureq::Error),
-    JSON(std::io::Error),
+    Json(std::io::Error),
 }
 
 pub fn add_to_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
@@ -119,13 +119,8 @@ fn get_playlist_items_helper(
                 Some("null") => Ok((data.items, true)),
                 Some(..) => Ok((data.items, false)),
             },
-            Err(e) => Err(UreqOrJSONError::JSON(e)),
+            Err(e) => Err(UreqOrJSONError::Json(e)),
         },
         Err(e) => Err(UreqOrJSONError::Request(e)),
     }
-    // match res.next.as_deref() {
-    //     None => Ok((res.items, true)),
-    //     Some("null") => Ok((res.items, true)),
-    //     Some(..) => Ok((res.items, false)),
-    // }
 }
