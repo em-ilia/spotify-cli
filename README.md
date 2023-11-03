@@ -4,12 +4,14 @@ I will lose my mind if my Taylor Mix playlist is not sorted by album at all time
 
 ## Features
 - Easy (relative) **auth**entication with a spotify developer account
-- **Copy** contents of a playlist into a different playlist
-- **Sort** contents of a playlist by multiple factors
-  - Album release
-  - Track number (order on album)
-- **Clear** a playlist
-- Dump playlist contents (for backup)
+- Playlist functions
+  - **Copy** contents of a playlist into a different playlist
+  - **Sort** contents of a playlist by multiple factors
+    - Album release
+    - Track number (order on album)
+  - **Clear** a playlist
+  - Create a **new** playlist
+  - Dump playlist contents (for backup)
 
 ## Usage
 Pass `-h` or `--help` to see mostly helpful usage notes (thanks [clap](https://github.com/clap-rs/clap)).
@@ -42,7 +44,7 @@ cargo my beloved
 ## Example
 Here I assume you've already followed the steps in [Usage](#Usage).
 
-Get yourself a nice clean playlist:
+Get yourself a nice clean playlist by running `./spotify-cli playlist new "NAME-OF-PLAYLIST"`
 
 <img src="https://github.com/em-ilia/spotify-cli/assets/23224059/21d4ba08-089d-4abe-a43f-16b7b66f294b" width=60%>
 
@@ -50,20 +52,20 @@ If you look at the URL for that playlist (either share it or *use the browser cl
 you'll get a URL like `https://open.spotify.com/playlist/cool-funky-letters-and-numbers`.
 The last part is the playlist URI, which you'll want to copy.
 If you already have a playlist you want to paste into this new one, get its URI too.
-Then if we run `./spotify-cli copy SOURCE-URI into DEST-URI` we'll populate our new playlist.
+Then if we run `./spotify-cli playlist copy SOURCE-URI into DEST-URI` we'll populate our new playlist.
 
 <img src="https://github.com/em-ilia/spotify-cli/assets/23224059/3facb601-61c1-439b-a40a-74c784a210e0" width=60%>
 
 That's great, but isn't it disgusting how we have songs from *rep* mixed in with songs from *Lover*?
 Even worse, we have End Game after Delicate, even though End Game appears first on the album.
-To fix this, we run `./spotify-cli sort SOURCE-URI album-release track-number`.
+To fix this, we run `./spotify-cli playlist sort SOURCE-URI album-release track-number`.
 
 <img src="https://github.com/em-ilia/spotify-cli/assets/23224059/b0ab6f03-cdff-4300-bcf3-b502c61743b2" width=60%>
 
 Now everything is as it should be. The songs from *reputation* appear first because chronologically,
 it was the first album to be released (Taylor's Versions count as being later 😮‍💨 and I don't like self-titled).
 
-Alternatively, if you run `./spotify-cli sort SOURCE-URI track-number album-release`
+Alternatively, if you run `./spotify-cli playlist sort SOURCE-URI track-number album-release`
 you'll get a playlist sorted first by track number, then by album release.
 Personally, I hate this. It makes me uncomfortable. I find it unseemly.
 
