@@ -124,3 +124,8 @@ fn get_playlist_items_helper(
         Err(e) => Err(UreqOrJSONError::Request(e)),
     }
 }
+
+pub fn create_playlist(name: &str, token: &Token) -> Result<Uri, UreqOrJSONError> {
+    // Blocked: need to have a way to get User ID
+    unimplemented!()
+}
