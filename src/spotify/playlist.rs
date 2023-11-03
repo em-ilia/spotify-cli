@@ -5,7 +5,6 @@ use serde::Deserialize;
 use crate::spotify::types::{PlaylistTrackObject, Token, TrackObject, Uri};
 use crate::util::UreqOrJSONError;
 
-
 pub fn add_to_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
     for chunk in uris.chunks(100) {
         add_to_playlist_helper(id, chunk, token)?;
@@ -99,25 +98,20 @@ fn get_playlist_items_helper(
     // Returns Ok(vec![list of uris], true) if there is no next page
     // Returns Ok(vec![list of uris], false) if we need to keep fetching
 
-    let res = agent
+    let res: GetPlaylistItemsRes = agent
         .get(&(crate::spotify::BASE_URL.to_owned() + "/playlists/" + id + "/tracks"))
         .set("Authorization", &("Bearer ".to_owned() + &token.0))
         .query_pairs(vec![
             ("offset", offset.to_string().as_str()),
             ("limit", "50"),
         ])
-        .call();
+        .call()?
+        .into_json()?;
 
-    match res {
-        Ok(res) => match res.into_json::<GetPlaylistItemsRes>() {
-            Ok(data) => match data.next.as_deref() {
-                None => Ok((data.items, true)),
-                Some("null") => Ok((data.items, true)),
-                Some(..) => Ok((data.items, false)),
-            },
-            Err(e) => Err(UreqOrJSONError::Json(e)),
-        },
-        Err(e) => Err(UreqOrJSONError::Request(e)),
+    match res.next.as_deref() {
+        None => Ok((res.items, true)),
+        Some("null") => Ok((res.items, true)),
+        Some(..) => Ok((res.items, false)),
     }
 }
 

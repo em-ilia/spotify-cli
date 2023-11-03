@@ -2,11 +2,14 @@ use std::fs;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum UreqOrJSONError {
-    Request(ureq::Error),
-    Json(std::io::Error),
+    #[error("Request failed or got 4xx code")]
+    Request(#[from] ureq::Error),
+    #[error("Failure to parse JSON")]
+    Json(#[from] std::io::Error),
 }
 
 #[derive(Serialize, Deserialize, Debug)]
