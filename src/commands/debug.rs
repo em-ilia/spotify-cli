@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::{auth, spotify, util};
+use crate::{commands::auth, spotify, util};
 
 pub fn dump_playlist(path: PathBuf, playlist: &str) {
     let config = util::read_config(&path);

@@ -1,6 +1,6 @@
 use clap::ValueEnum;
 
-use crate::{util, auth, spotify};
+use crate::{util, commands::auth, spotify};
 
 #[derive(ValueEnum, Clone, Copy)]
 pub enum CopyPreposition {

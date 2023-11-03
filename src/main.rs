@@ -1,7 +1,4 @@
-mod auth;
-mod copy;
-mod sort;
-mod debug;
+mod commands;
 mod spotify;
 mod util;
 
@@ -33,7 +30,7 @@ enum Commands {
         /// Copying A into B modifies B, using contents of A
         ///
         /// Copying A from B modifies A, using contents of B
-        prep: copy::CopyPreposition,
+        prep: commands::playlist::copy::CopyPreposition,
 
         #[arg(value_name = "Playlist 2")]
         b: String,
@@ -43,7 +40,7 @@ enum Commands {
         playlist: String,
 
         #[arg(value_name = "Sorting method")]
-        sort_method: Vec<sort::SortMethod>,
+        sort_method: Vec<commands::playlist::sort::SortMethod>,
     },
     Auth,
     Debug {
@@ -71,22 +68,22 @@ fn main() {
 
     match &cli.command {
         Commands::Copy { a, prep, b } => {
-            copy::run(cli.config, a, prep, b);
+            commands::playlist::copy::run(cli.config, a, prep, b);
         }
         Commands::Sort { playlist, sort_method } => {
-            sort::run(cli.config, playlist, sort_method);
+            commands::playlist::sort::run(cli.config, playlist, sort_method);
         }
         Commands::Auth => {
-            auth::run(cli.config);
+            commands::auth::run(cli.config);
         }
         Commands::Debug { debug_command } => {
             // Match the debug subcommands
             match debug_command {
                 DebugSub::DumpPlaylist { playlist } => {
-                    debug::dump_playlist(cli.config, playlist);
+                    commands::debug::dump_playlist(cli.config, playlist);
                 }
                 DebugSub::ClearPlaylist { playlist } => {
-                    debug::clear_playlist(cli.config, playlist);
+                    commands::debug::clear_playlist(cli.config, playlist);
                 }
             }
         }

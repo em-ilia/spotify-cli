@@ -2,9 +2,9 @@ use std::cmp::Ordering;
 
 use clap::ValueEnum;
 
-use crate::{auth, spotify::{self, types::TrackObject, types::Uri}, util};
+use crate::{commands::auth, spotify::{self, types::TrackObject, types::Uri}, util};
 use spotify::types;
-use crate::sort::parsed_release_date::ParsedReleaseDate;
+use crate::commands::playlist::sort::parsed_release_date::ParsedReleaseDate;
 
 #[derive(ValueEnum, Clone, Copy, Debug)]
 #[non_exhaustive]
