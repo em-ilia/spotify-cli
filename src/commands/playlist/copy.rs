@@ -10,14 +10,7 @@ pub enum CopyPreposition {
 }
 
 pub fn run(path: std::path::PathBuf, a: &str, prep: &CopyPreposition, b: &str) {
-    // Token acquisition
-    let config = util::read_config(&path);
-    let token = auth::refresh(&config);
-    if token.is_err() {
-        println!("Failed to auth: {:?}", token.unwrap_err());
-        return;
-    }
-    let token = token.unwrap();
+    let token = util::get_token(&path);
 
     match prep {
         CopyPreposition::From => {

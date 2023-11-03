@@ -45,3 +45,14 @@ pub fn write_config(path: PathBuf, config: Config) {
 
     fs::write(path, data).ok();
 }
+
+pub fn get_token(path: &PathBuf) -> crate::spotify::types::Token {
+    // Token acquisition
+    let config = crate::util::read_config(&path);
+    let token = crate::commands::auth::refresh(&config);
+    if token.is_err() {
+        println!("Failed to auth: {:?}", token.unwrap_err());
+        std::process::exit(1);
+    }
+    token.unwrap()
+}

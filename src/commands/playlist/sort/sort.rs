@@ -50,14 +50,7 @@ impl SortMethod {
 }
 
 pub fn run(path: std::path::PathBuf, playlist: &str, methods: &Vec<SortMethod>) {
-    // Token acquisition
-    let config = util::read_config(&path);
-    let token = auth::refresh(&config);
-    if token.is_err() {
-        println!("Failed to auth: {:?}", token.unwrap_err());
-        return;
-    }
-    let token = token.unwrap();
+    let token = util::get_token(&path);
 
     let tracks = spotify::playlist::get_playlist_items(playlist, &token);
     if tracks.is_err() {

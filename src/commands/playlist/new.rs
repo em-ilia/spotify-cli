@@ -1,14 +1,7 @@
 use crate::{util, commands::auth, spotify};
 
 pub fn run(path: std::path::PathBuf, name: &str) {
-    // Token acquisition
-    let config = util::read_config(&path);
-    let token = auth::refresh(&config);
-    if token.is_err() {
-        println!("Failed to auth: {:?}", token.unwrap_err());
-        return;
-    }
-    let token = token.unwrap();
+    let token = util::get_token(&path);
 
     let res = spotify::playlist::create_playlist(name, &token);
 

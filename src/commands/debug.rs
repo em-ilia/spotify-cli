@@ -6,13 +6,7 @@ use serde_json;
 use crate::{commands::auth, spotify, util};
 
 pub fn dump_playlist(path: PathBuf, playlist: &str) {
-    let config = util::read_config(&path);
-    let token = auth::refresh(&config);
-    if token.is_err() {
-        println!("Failed to get auth: {:?}", token.unwrap_err());
-        return;
-    }
-    let token = token.unwrap();
+    let token = util::get_token(&path);
 
     let res = spotify::playlist::get_playlist_items(playlist, &token);
 
@@ -44,13 +38,7 @@ pub fn dump_playlist(path: PathBuf, playlist: &str) {
 }
 
 pub fn clear_playlist(path: PathBuf, playlist: &str) {
-    let config = util::read_config(&path);
-    let token = auth::refresh(&config);
-    if token.is_err() {
-        println!("Failed to get auth: {:?}", token.unwrap_err());
-        return;
-    }
-    let token = token.unwrap();
+    let token = util::get_token(&path);
 
     let res = spotify::playlist::set_playlist(playlist, &[], &token);
 
