@@ -51,7 +51,7 @@ pub fn get_user_top_tracks(
         }
     }
 
-    Ok(tracks)
+    Ok(tracks.into_iter().take(num as usize).collect())
 }
 
 fn get_user_profile(token: &Token) -> Result<UserProfile, UreqOrJSONError> {

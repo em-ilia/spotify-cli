@@ -23,7 +23,10 @@ enum Commands {
         #[command(subcommand)]
         playlist_command: PlaylistCommands,
     },
-    User,
+    User {
+        #[command(subcommand)]
+        user_command: UserCommands,
+    },
     Auth,
     Debug {
         #[command(subcommand)]
@@ -66,6 +69,29 @@ enum PlaylistCommands {
 }
 
 #[derive(Subcommand)]
+enum UserCommands {
+    #[command(about = "Get a user's top tracks")]
+    TopTracks {
+        #[arg(value_name = "Duration", help = "Period over which to get tracks")]
+        #[arg(short = 't')]
+        #[arg(long = "term")]
+        term: commands::user::Term,
+
+        #[arg(value_name = "Dump", help = "Instead of creating a playlist, write to stdout")]
+        #[arg(short = 'd')]
+        #[arg(long = "dump")]
+        dump: Option<bool>,
+
+        #[arg(required_unless_present("dump"))]
+        name: Option<String>,
+
+        #[arg(value_name = "Number", help = "(Max) Number of tracks to get")]
+        #[arg(short = 'n', long = "number")]
+        number: u16
+    },
+}
+
+#[derive(Subcommand)]
 enum DebugSub {
     /// Dumps the contents of a playlist to stdout
     DumpPlaylist {
@@ -97,8 +123,10 @@ fn main() {
                 commands::playlist::new::run(cli.config, name);
             }
         },
-        Commands::User => {
-            unimplemented!()
+        Commands::User { user_command } => match user_command {
+            UserCommands::TopTracks { term, dump, name, number } => {
+                commands::user::top_tracks::run(cli.config, term, *number, name.as_deref(), *dump)
+            }
         }
         Commands::Auth => {
             commands::auth::run(cli.config);
