@@ -3,12 +3,8 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::spotify::types::{PlaylistTrackObject, Token, TrackObject, Uri};
+use crate::util::UreqOrJSONError;
 
-#[derive(Debug)]
-pub enum UreqOrJSONError {
-    Request(ureq::Error),
-    Json(std::io::Error),
-}
 
 pub fn add_to_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
     for chunk in uris.chunks(100) {

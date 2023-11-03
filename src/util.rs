@@ -3,7 +3,11 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
-
+#[derive(Debug)]
+pub enum UreqOrJSONError {
+    Request(ureq::Error),
+    Json(std::io::Error),
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
