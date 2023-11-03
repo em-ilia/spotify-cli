@@ -127,8 +127,7 @@ pub fn create_playlist(name: &str, token: &Token) -> Result<(Uri, String), UreqO
 
     let res = ureq::post(&(crate::spotify::BASE_URL.to_owned() + "/users/" + id.0.as_str() + "/playlists"))
         .set("Authorization", &("Bearer ".to_owned() + &token.0))
-        .query("name", name)
-        .call()?
+        .send_json(ureq::json!({"name": name}))?
         .into_json::<CreatePlaylistRes>()?;
 
     Ok((res.id, res.href))
