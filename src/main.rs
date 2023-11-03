@@ -19,6 +19,20 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    Playlist {
+        #[command(subcommand)]
+        playlist_command: PlaylistCommands,
+    },
+    User,
+    Auth,
+    Debug {
+        #[command(subcommand)]
+        debug_command: DebugSub,
+    },
+}
+
+#[derive(Subcommand)]
+enum PlaylistCommands {
     #[command(about = "Copy a playlist's contents into another")]
     Copy {
         #[arg(value_name = "Playlist 1")]
@@ -42,11 +56,6 @@ enum Commands {
         #[arg(value_name = "Sorting method")]
         sort_method: Vec<commands::playlist::sort::SortMethod>,
     },
-    Auth,
-    Debug {
-        #[command(subcommand)]
-        debug_command: DebugSub,
-    },
 }
 
 #[derive(Subcommand)]
@@ -67,11 +76,19 @@ fn main() {
     let cli = Cli::parse();
 
     match &cli.command {
-        Commands::Copy { a, prep, b } => {
-            commands::playlist::copy::run(cli.config, a, prep, b);
-        }
-        Commands::Sort { playlist, sort_method } => {
-            commands::playlist::sort::run(cli.config, playlist, sort_method);
+        Commands::Playlist { playlist_command } => match playlist_command {
+            PlaylistCommands::Copy { a, prep, b } => {
+                commands::playlist::copy::run(cli.config, a, prep, b);
+            }
+            PlaylistCommands::Sort {
+                playlist,
+                sort_method,
+            } => {
+                commands::playlist::sort::run(cli.config, playlist, sort_method);
+            }
+        },
+        Commands::User => {
+            unimplemented!()
         }
         Commands::Auth => {
             commands::auth::run(cli.config);
