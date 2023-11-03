@@ -47,6 +47,12 @@ pub struct ArtistObject {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Uri(pub String);
 
+impl std::fmt::Display for Uri {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl Uri {
     pub fn _get_suffix(&self) -> String {
         self.0
