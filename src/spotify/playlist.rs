@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use serde::Deserialize;
 
 use crate::spotify::types::{PlaylistTrackObject, Token, TrackObject, Uri};
+use crate::spotify::user;
 use crate::util::UreqOrJSONError;
 
 pub fn add_to_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
@@ -115,7 +116,20 @@ fn get_playlist_items_helper(
     }
 }
 
-pub fn create_playlist(name: &str, token: &Token) -> Result<Uri, UreqOrJSONError> {
-    // Blocked: need to have a way to get User ID
-    unimplemented!()
+#[derive(Deserialize)]
+struct CreatePlaylistRes {
+    id: Uri,
+    href: String,
+}
+
+pub fn create_playlist(name: &str, token: &Token) -> Result<(Uri, String), UreqOrJSONError> {
+    let id = user::get_user_id(token)?;
+
+    let res = ureq::post(&(crate::spotify::BASE_URL.to_owned() + "/users/" + id.0.as_str() + "/playlists"))
+        .set("Authorization", &("Bearer ".to_owned() + &token.0))
+        .query("name", name)
+        .call()?
+        .into_json::<CreatePlaylistRes>()?;
+
+    Ok((res.id, res.href))
 }
