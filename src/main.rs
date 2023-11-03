@@ -56,6 +56,10 @@ enum PlaylistCommands {
         #[arg(value_name = "Sorting method")]
         sort_method: Vec<commands::playlist::sort::SortMethod>,
     },
+    New {
+        #[arg(value_name = "Name")]
+        name: String,
+    }
 }
 
 #[derive(Subcommand)]
@@ -85,6 +89,9 @@ fn main() {
                 sort_method,
             } => {
                 commands::playlist::sort::run(cli.config, playlist, sort_method);
+            }
+            PlaylistCommands::New { name } => {
+                commands::playlist::new::run(cli.config, name);
             }
         },
         Commands::User => {
