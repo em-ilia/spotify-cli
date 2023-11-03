@@ -47,6 +47,9 @@ enum PlaylistCommands {
         prep: commands::playlist::copy::CopyPreposition,
 
         #[arg(value_name = "Playlist 2")]
+        #[arg(
+            long_help = "Either the URI of a playlist to copy from/into,\nor the name of a new playlist"
+        )]
         b: String,
     },
     Sort {
@@ -59,7 +62,7 @@ enum PlaylistCommands {
     New {
         #[arg(value_name = "Name")]
         name: String,
-    }
+    },
 }
 
 #[derive(Subcommand)]
