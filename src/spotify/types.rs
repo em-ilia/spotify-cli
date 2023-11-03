@@ -63,7 +63,7 @@ pub struct SpotifyId(pub String);
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[non_exhaustive]
 pub struct UserProfile {
-    pub id: String,
+    pub id: UserId,
     pub display_name: Option<String>,
     pub images: Option<Vec<ImageObject>>,
 }
@@ -74,5 +74,8 @@ pub struct ImageObject {
     pub url: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Token(pub String);
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct UserId(pub String);
