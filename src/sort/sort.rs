@@ -1,7 +1,6 @@
 use std::cmp::Ordering;
 
 use clap::ValueEnum;
-use reqwest::blocking;
 
 use crate::{auth, spotify::{self, types::TrackObject, types::Uri}, util};
 use spotify::types;

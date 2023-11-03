@@ -1,5 +1,4 @@
 use clap::ValueEnum;
-use reqwest::blocking;
 
 use crate::{util, auth, spotify};
 

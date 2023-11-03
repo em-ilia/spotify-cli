@@ -4,7 +4,13 @@ use serde::Deserialize;
 
 use crate::spotify::types::{PlaylistTrackObject, Token, TrackObject, Uri};
 
-pub fn add_to_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), reqwest::Error> {
+#[derive(Debug)]
+pub enum UreqOrJSONError {
+    Request(ureq::Error),
+    JSON(std::io::Error),
+}
+
+pub fn add_to_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
     for chunk in uris.chunks(100) {
         add_to_playlist_helper(id, chunk, token)?;
     }
@@ -12,26 +18,20 @@ pub fn add_to_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), reqw
     Ok(())
 }
 
-fn add_to_playlist_helper(id: &str, uris: &[Uri], token: &Token) -> Result<(), reqwest::Error> {
-    let mut params = HashMap::new();
-    params.insert("position", "0"); // Insert at top, we could remove to append
-
+fn add_to_playlist_helper(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
     let mut body: HashMap<String, Vec<String>> = HashMap::new();
     let uris: Vec<String> = uris.iter().map(|u| &u.0).cloned().collect();
     body.insert("uris".to_owned(), uris);
 
-    let client = reqwest::blocking::Client::new();
-    let _res = client
-        .post(crate::spotify::BASE_URL.to_owned() + "/playlists/" + id + "/tracks")
-        .query(&params)
-        .json(&body)
-        .header("Authorization", "Bearer ".to_owned() + &token.0)
-        .send()?;
+    let _res = ureq::post(&(crate::spotify::BASE_URL.to_owned() + "/playlists/" + id + "/tracks"))
+        .query("position", "0")
+        .set("Authorization", &("Bearer ".to_owned() + &token.0))
+        .send_json(body)?;
 
     Ok(())
 }
 
-pub fn set_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), reqwest::Error> {
+pub fn set_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
     if uris.len() == 0 {
         set_playlist_helper(id, &Vec::new(), token)?;
         return Ok(());
@@ -45,17 +45,14 @@ pub fn set_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), reqwest
 }
 
 // No more than 100 to be passed into this function!
-fn set_playlist_helper(id: &str, uris: &[Uri], token: &Token) -> Result<(), reqwest::Error> {
+fn set_playlist_helper(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
     let mut body: HashMap<String, Vec<String>> = HashMap::new();
     let uris: Vec<String> = uris.iter().map(|u| &u.0).cloned().collect();
     body.insert("uris".to_owned(), uris);
 
-    let client = reqwest::blocking::Client::new();
-    let _res = client
-        .put(crate::spotify::BASE_URL.to_owned() + "/playlists/" + id + "/tracks")
-        .json(&body)
-        .header("Authorization", "Bearer ".to_owned() + &token.0)
-        .send()?;
+    let _res = ureq::put(&(crate::spotify::BASE_URL.to_owned() + "/playlists/" + id + "/tracks"))
+        .set("Authorization", &("Bearer ".to_owned() + &token.0))
+        .send_json(&body)?;
 
     Ok(())
 }
@@ -66,15 +63,15 @@ struct GetPlaylistItemsRes {
     pub next: Option<String>,
 }
 
-pub fn get_playlist_items(id: &str, token: &Token) -> Result<Vec<TrackObject>, reqwest::Error> {
+pub fn get_playlist_items(id: &str, token: &Token) -> Result<Vec<TrackObject>, UreqOrJSONError> {
     let mut tracks: Vec<TrackObject> = Vec::new();
     let mut done = false;
     let mut offset = 0u16;
 
-    let mut client = reqwest::blocking::Client::new();
+    let agent = ureq::Agent::new();
 
     while !done {
-        match get_playlist_items_helper(id, token, &mut client, offset) {
+        match get_playlist_items_helper(id, token, &agent, offset) {
             Ok((playlist_tracks, is_done)) => {
                 match is_done {
                     false => offset += 50,
@@ -90,29 +87,45 @@ pub fn get_playlist_items(id: &str, token: &Token) -> Result<Vec<TrackObject>, r
     Ok(tracks)
 }
 
-pub fn get_playlist_uris(id: &str, token: &Token) -> Result<Vec<Uri>, reqwest::Error> {
-    Ok(get_playlist_items(id, token)?.into_iter().map(|t| t.uri).collect())
+pub fn get_playlist_uris(id: &str, token: &Token) -> Result<Vec<Uri>, UreqOrJSONError> {
+    Ok(get_playlist_items(id, token)?
+        .into_iter()
+        .map(|t| t.uri)
+        .collect())
 }
 
 fn get_playlist_items_helper(
     id: &str,
     token: &Token,
-    client: &mut reqwest::blocking::Client,
+    agent: &ureq::Agent,
     offset: u16,
-) -> Result<(Vec<PlaylistTrackObject>, bool), reqwest::Error> {
+) -> Result<(Vec<PlaylistTrackObject>, bool), UreqOrJSONError> {
     // Returns Ok(vec![list of uris], true) if there is no next page
     // Returns Ok(vec![list of uris], false) if we need to keep fetching
 
-    let res: GetPlaylistItemsRes = client
-        .get(crate::spotify::BASE_URL.to_owned() + "/playlists/" + id + "/tracks")
-        .header("Authorization", "Bearer ".to_owned() + &token.0)
-        .query(&[("offset", offset), ("limit", 50)])
-        .send()?
-        .json()?;
+    let res = agent
+        .get(&(crate::spotify::BASE_URL.to_owned() + "/playlists/" + id + "/tracks"))
+        .set("Authorization", &("Bearer ".to_owned() + &token.0))
+        .query_pairs(vec![
+            ("offset", offset.to_string().as_str()),
+            ("limit", "50"),
+        ])
+        .call();
 
-    match res.next.as_deref() {
-        None => Ok((res.items, true)),
-        Some("null") => Ok((res.items, true)),
-        Some(..) => Ok((res.items, false)),
+    match res {
+        Ok(res) => match res.into_json::<GetPlaylistItemsRes>() {
+            Ok(data) => match data.next.as_deref() {
+                None => Ok((data.items, true)),
+                Some("null") => Ok((data.items, true)),
+                Some(..) => Ok((data.items, false)),
+            },
+            Err(e) => return Err(UreqOrJSONError::JSON(e)),
+        },
+        Err(e) => return Err(UreqOrJSONError::Request(e)),
     }
+    // match res.next.as_deref() {
+    //     None => Ok((res.items, true)),
+    //     Some("null") => Ok((res.items, true)),
+    //     Some(..) => Ok((res.items, false)),
+    // }
 }

@@ -70,22 +70,20 @@ pub fn run(path: PathBuf) {
     println!("{}", code);
 
     // Get the token and more importantly refresh token from spotify
-    let client = reqwest::blocking::Client::new();
-    let params = [
+    let params = vec![
         ("grant_type", "authorization_code"),
         ("code", &code),
         ("redirect_uri", REDIRECT_URI),
         ("client_id", &client_id),
         ("client_secret", &client_secret),
     ];
-    let res: AuthorizationRequestResponse = client
-        .post("https://accounts.spotify.com/api/token")
-        .query(&params)
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .header("Content-Length", 0)
-        .send()
+    let res: AuthorizationRequestResponse = ureq::post("https://accounts.spotify.com/api/token")
+        .set("Content-Type", "application/x-www-form-urlencoded")
+        .set("Content-Length", "0")
+        .query_pairs(params)
+        .call()
         .expect("Failed to get token")
-        .json()
+        .into_json()
         .expect("Failed to parse token response");
 
     util::write_config(
@@ -108,7 +106,8 @@ struct RefreshRes {
 
 #[derive(Debug)]
 pub enum RefreshError {
-    Reqwest(reqwest::Error),
+    Request(ureq::Error),
+    JSON(std::io::Error),
     Config {
         missing_refresh_token: bool,
         missing_client_id: bool,
@@ -139,8 +138,6 @@ impl Config {
 }
 
 pub fn refresh(config: &util::Config) -> Result<Token, RefreshError> {
-    let client = reqwest::blocking::Client::new();
-
     if !config.is_valid() {
         let missing = config.check_config();
         return Err(RefreshError::Config {
@@ -153,24 +150,23 @@ pub fn refresh(config: &util::Config) -> Result<Token, RefreshError> {
     let client_id = config.client_id.clone().unwrap();
     let client_secret = config.client_secret.clone().unwrap();
 
-    let res = client
-        .post("https://accounts.spotify.com/api/token".to_owned())
-        .query(&[
+    let res = ureq::post("https://accounts.spotify.com/api/token")
+        .set("Content-Type", "application/x-www-form-urlencoded")
+        .set("Content-Length", "0")
+        .query_pairs(vec![
             ("grant_type", "refresh_token"),
             ("refresh_token", &refresh_token),
             ("client_id", &client_id),
             ("client_secret", &client_secret),
         ])
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .header("Content-Length", 0)
-        .send();
+        .call();
 
     if res.is_err() {
-        return Err(RefreshError::Reqwest(res.unwrap_err()))
+        return Err(RefreshError::Request(res.unwrap_err()));
     }
 
-    match res.unwrap().json::<RefreshRes>() {
-        Err(e) => Err(RefreshError::Reqwest(e)),
-        Ok(t) => Ok(Token(t.access_token))
+    match res.unwrap().into_json::<RefreshRes>() {
+        Err(e) => Err(RefreshError::JSON(e)),
+        Ok(t) => Ok(Token(t.access_token)),
     }
 }
