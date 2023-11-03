@@ -41,13 +41,11 @@ fn run_order_const(path: std::path::PathBuf, from: &str, to: &str) {
                 },
                 Err(e) => {
                     println!("Failed to add to playlist\n{:?}", e);
-                    return;
                 }
             }
         },
         Err(e) => {
             println!("Failed to get from playlist\n{:?}", e);
-            return;
         }
     }
 }

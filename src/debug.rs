@@ -25,7 +25,7 @@ pub fn clear_playlist(path: PathBuf, playlist: &str) {
     }
     let token = token.unwrap();
 
-    let res = spotify::playlist::set_playlist(playlist, &vec![], &token);
+    let res = spotify::playlist::set_playlist(playlist, &[], &token);
 
     match res {
         Ok(_) => println!("Playlist cleared."),

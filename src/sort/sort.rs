@@ -26,12 +26,12 @@ impl SortMethod {
             .album.as_ref()
             .map(|album| album.release_date.as_str())
             .ok_or(Err::<ParsedReleaseDate, String>("No album".to_owned()))
-            .map(|rd| ParsedReleaseDate::try_from(rd));
+            .map(ParsedReleaseDate::try_from);
         let b_rd = b
             .album.as_ref()
             .map(|album| album.release_date.as_str())
             .ok_or(Err::<ParsedReleaseDate, String>("No album".to_owned()))
-            .map(|rd| ParsedReleaseDate::try_from(rd));
+            .map(ParsedReleaseDate::try_from);
 
         match (a_rd, b_rd) {
             (Err(_), Err(_)) => Ordering::Equal,
@@ -45,7 +45,7 @@ impl SortMethod {
         let a_tn = a.track_number;
         let b_tn = b.track_number;
 
-        return a_tn.cmp(&b_tn);
+        a_tn.cmp(&b_tn)
     }
 }
 
@@ -77,11 +77,9 @@ pub fn run(path: std::path::PathBuf, playlist: &str, methods: &Vec<SortMethod>) 
     match res {
         Err(e) => {
             println!("Failed to set playlist:\n{:?}", e);
-            return;
         }
         Ok(_) => {
             println!("Sorting complete.");
-            return;
         }
     }
 }
@@ -89,10 +87,10 @@ pub fn run(path: std::path::PathBuf, playlist: &str, methods: &Vec<SortMethod>) 
 fn run_sort_round_by<'a>(chunks: Vec<Vec<TrackObject>>, method: SortMethod) -> Vec<Vec<TrackObject>> {
     let mut out: Vec<Vec<TrackObject>> = Vec::new();
     for mut chunk in chunks {
-        chunk.sort_unstable_by(|a,b| method.cmp(&a,&b));
+        chunk.sort_unstable_by(|a,b| method.cmp(a,b));
         let mut new: Vec<TrackObject> = Vec::new();
         new.push(chunk.remove(0));
-        while chunk.len() != 0 {
+        while !chunk.is_empty() {
             match method.cmp(new.last().unwrap(), chunk.first().unwrap()) {
                 Ordering::Equal => {
                     new.push(chunk.remove(0))
@@ -108,5 +106,5 @@ fn run_sort_round_by<'a>(chunks: Vec<Vec<TrackObject>>, method: SortMethod) -> V
     }
 
     // println!("sort.rs:110\n{:?}\n-----", out);
-    return out;
+    out
 }

@@ -32,7 +32,7 @@ fn add_to_playlist_helper(id: &str, uris: &[Uri], token: &Token) -> Result<(), u
 }
 
 pub fn set_playlist(id: &str, uris: &[Uri], token: &Token) -> Result<(), ureq::Error> {
-    if uris.len() == 0 {
+    if uris.is_empty() {
         set_playlist_helper(id, &Vec::new(), token)?;
         return Ok(());
     }
@@ -119,9 +119,9 @@ fn get_playlist_items_helper(
                 Some("null") => Ok((data.items, true)),
                 Some(..) => Ok((data.items, false)),
             },
-            Err(e) => return Err(UreqOrJSONError::JSON(e)),
+            Err(e) => Err(UreqOrJSONError::JSON(e)),
         },
-        Err(e) => return Err(UreqOrJSONError::Request(e)),
+        Err(e) => Err(UreqOrJSONError::Request(e)),
     }
     // match res.next.as_deref() {
     //     None => Ok((res.items, true)),

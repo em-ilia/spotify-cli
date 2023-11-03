@@ -19,10 +19,10 @@ impl TryFrom<&str> for ParsedReleaseDate {
 
         let split: Vec<&str> = value.split('-').collect();
 
-        if split.len() == 0 || split.len() > 3 {
+        if split.is_empty() || split.len() > 3 {
             return Err("Improper number of split groups".to_owned());
         }
-        if split.len() >= 1 {
+        if !split.is_empty() {
             if let Ok(year) = split[0].parse::<u16>() {
                 prd.year = Some(year);
             } else {
@@ -44,7 +44,7 @@ impl TryFrom<&str> for ParsedReleaseDate {
             }
         }
 
-        return Ok(prd);
+        Ok(prd)
     }
 }
 
@@ -84,10 +84,10 @@ impl PartialOrd for ParsedReleaseDate {
             (Some(a), Some(b)) => Some(a.cmp(&b))
         };
         match day {
-            None => return month,
-            Some(Ordering::Less) => return Some(Ordering::Less),
-            Some(Ordering::Greater) => return Some(Ordering::Greater),
-            Some(Ordering::Equal) => return Some(Ordering::Equal)
+            None => month,
+            Some(Ordering::Less) => Some(Ordering::Less),
+            Some(Ordering::Greater) => Some(Ordering::Greater),
+            Some(Ordering::Equal) => Some(Ordering::Equal)
         }
     }
 }
